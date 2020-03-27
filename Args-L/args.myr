@@ -1,0 +1,52 @@
+use std
+
+var reverse
+
+const main = {args : byte[:][:]
+	var cmd
+	var mark = "→ "
+	var delay = 200 * std.Msec
+	reverse = false
+
+	cmd = std.optparse(args, &[
+		.argdesc = "words…",
+		.opts = [
+			[.opt='r',						.desc = "reverse output"],
+			[.opt='m',	.arg = "mark",		.desc = "list items with prefix 'mark'"],
+			[.opt='T',	.arg = "period",	.desc = "set print sleep delay to 'period' ms"],
+		][:]
+	])
+
+	for opt : cmd.opts
+		match opt
+		| ('r', ""):
+			reverse = true
+		| ('m', arg):
+			mark = arg
+		| ('T', arg):
+			match std.intparse(arg)
+			| `std.Some v:
+				delay = v * std.Msec
+			| `std.None:
+				std.fatal("err: invalid argument for period\n")
+			;;
+		| _:
+			std.fatal("unreachable\n")
+		;;
+	;;
+
+	if reverse
+		var i
+		for i = 0; i < cmd.args.len / 2; i++
+			var tmp
+			tmp = cmd.args[i]
+			cmd.args[i] = cmd.args[cmd.args.len - 1 - i]
+			cmd.args[cmd.args.len - 1 - i] = tmp
+		;;
+	;;
+
+	for arg : cmd.args
+		std.put("{} {}\n", mark, arg)
+		std.usleep(delay)
+	;;
+}
